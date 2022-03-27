@@ -4,23 +4,21 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 
+#include "arduino_secrets.h"
 
 #define DHTPIN 4     // what digital pin the DHT22 is conected to
 #define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
 
-const char* ssid = "Livebox-FLOLAU";
-const char* password = "F07101991BEME";
-const char* mqtt_server = "192.168.1.27";
-
-
-const char* serverName = "http://api.thingspeak.com/update";
-String apiKey = "ST1CBUD3NFWTOJPP";
+const char* ssid = SECRET_SSID ;
+const char* password = SECRET_PASS;
+const char* mqtt_server = SECRET_MQTT_SERVER ;
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
 
 int ledPinBlue = 16;
 int ledPinRed = 14;
+int ledPinGreen = 5;
 
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -28,23 +26,48 @@ PubSubClient MQTT_CLIENT;
 WiFiClient client;
 
 void setup() {
+  // Initialisation de la console
   Serial.begin(9600);
   Serial.setTimeout(2000);
-  // Wait for serial to initialize.
   while (!Serial) { }
-
-  pinMode(ledPinBlue, OUTPUT);
-  pinMode(ledPinRed, OUTPUT);
-  dht.begin();
-
-  TestLedStart();
-
   Serial.println("Device Started");
   Serial.println("-------------------------------------");
+
+  // Initialisation des led
+  pinMode(ledPinBlue, OUTPUT);
+  pinMode(ledPinRed, OUTPUT);
+  pinMode(ledPinGreen, OUTPUT);
+  TestLedStart();
+  delay(1000);
+
+  // Initialisation SENSOR
   Serial.println("Running DHT!");
   Serial.println("-------------------------------------");
+  dht.begin();
+  digitalWrite(ledPinBlue, HIGH);
+  Serial.println("DHT READY!");
+  Serial.println("-------------------------------------");
+  delay(2000);
 
+  // Initialisation Wifi
+  Serial.println("Connection Wifi start...");
+  Serial.println("-------------------------------------");
   reconnectWifi();
+  digitalWrite(ledPinRed, HIGH);
+  Serial.println("-------------------------------------");
+  delay(2000);
+
+  // Initialisation MQTT
+  Serial.println("Connection MQTT start...");
+  Serial.println("-------------------------------------");
+  reconnectMqtt();
+  digitalWrite(ledPinGreen, HIGH);
+  Serial.println("-------------------------------------");
+  delay(2000);
+
+  digitalWrite(ledPinRed, LOW);
+  digitalWrite(ledPinBlue, LOW);
+  digitalWrite(ledPinGreen, LOW);
 
 }
 
@@ -63,22 +86,31 @@ void signalSend() {
 void TestLedStart() {
   digitalWrite(ledPinBlue, HIGH);
   delay(500);
-  digitalWrite(ledPinBlue, LOW);
-  delay(500);
   digitalWrite(ledPinRed, HIGH);
+  delay(500);
+  digitalWrite(ledPinGreen, HIGH);
+  delay(500);
+  digitalWrite(ledPinGreen, LOW);
   delay(500);
   digitalWrite(ledPinRed, LOW);
   delay(500);
+  digitalWrite(ledPinBlue, LOW);
 }
 
 void humMore(float value) {
   float maxHum = (float) 80;
-  Serial.println(maxHum);
   if (value > maxHum) {
-    Serial.println("superieur");
+    digitalWrite(ledPinBlue, HIGH);
+  } else {
+    digitalWrite(ledPinBlue, LOW);
+  }
+}
+
+void tempMore(float value) {
+  float maxTemp = (float) 25;
+  if (value > maxTemp) {
     digitalWrite(ledPinRed, HIGH);
   } else {
-    Serial.println("inf");
     digitalWrite(ledPinRed, LOW);
   }
 }
@@ -88,7 +120,7 @@ void reconnectMqtt() {
   MQTT_CLIENT.setClient(client);
   String msg = "";
   while (!MQTT_CLIENT.connected()) {
-    MQTT_CLIENT.connect(mqtt_server, "flo", "F07101991BEME");
+    MQTT_CLIENT.connect(SECRET_DEVICE, "flo", "F07101991BEME");
     msg += ".";
     if (msg.length() > 36) {
       msg = ".";
@@ -96,41 +128,30 @@ void reconnectMqtt() {
     } else {
       Serial.print(msg);
     }
-
-    digitalWrite(ledPinBlue, HIGH);
-    delay(500);
-    digitalWrite(ledPinBlue, LOW);
-    delay(500);
+    digitalWrite(ledPinGreen, HIGH);
+    delay(1000);
+    digitalWrite(ledPinGreen, LOW);
+    delay(1000);
   }
   Serial.println("MQTT connected");
 }
 
 void reconnectWifi() {
   Serial.println("WiFi Disconnected-> Connexion en cours");
-  for (int i = 0; i <= 4; i++) {
-    digitalWrite(ledPinRed, HIGH);
-    delay(500);
-    digitalWrite(ledPinRed, LOW);
-    delay(500);
-  }
-
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     digitalWrite(ledPinRed, HIGH);
-    delay(1500);
+    delay(1000);
     digitalWrite(ledPinRed, LOW);
-    delay(1500);
+    delay(1000);
   }
 
   Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
-
-  digitalWrite(ledPinRed, LOW);
-  digitalWrite(ledPinBlue, LOW);
 }
 
 void errorWithSensor() {
@@ -163,39 +184,48 @@ void loop() {
       }
 
       Serial.print("humidity: ");
-      Serial.print(hum);
+      Serial.println(hum);
       Serial.println("-----------");
-      
+
       Serial.print("température: ");
-      Serial.print(temp);
+      Serial.println(temp);
       Serial.println("-----------");
-
-
 
       // conversion float->char
       char tempString[8];
-      dtostrf(temp, 1, 2, tempString);
-
       char humString[8];
+      dtostrf(temp, 1, 2, tempString);
       dtostrf(hum, 1, 2, humString);
 
+      String nameTopic = "espSensor/" ;
 
-      MQTT_CLIENT.publish("espSensor/cuisine/temp", tempString);
-
-    
-      MQTT_CLIENT.publish("espSensor/cuisine/hum", humString);
+      String tempTopicPub = nameTopic + SECRET_DEVICE +"/temp";      
+      String humTopicPub = nameTopic + SECRET_DEVICE +"/hum";
 
 
-      digitalWrite(ledPinBlue, HIGH);
+      Serial.println(test);
+
+      //      String tempTopicPub = "espSensor/" + SECRET_DEVICE + "/temp";
+      //      String humTopicPub = "espSensor/" + SECRET_DEVICE + "/hum";
+
+
+      //      MQTT_CLIENT.publish(tempTopicPub, tempString);
+      //      MQTT_CLIENT.publish(humTopicPub, humString);
+
+      delay(100);
+      humMore(hum);
+      delay(100);
+      tempMore(temp);
+      delay(100);
+
+      digitalWrite(ledPinGreen, HIGH);
       delay(200);
-      digitalWrite(ledPinBlue, LOW);
+      digitalWrite(ledPinGreen, LOW);
       delay(200);
-
-
-    }
-    else {
+    } else {
       reconnectWifi();
     }
+
     lastTime = millis();
   }
 }
