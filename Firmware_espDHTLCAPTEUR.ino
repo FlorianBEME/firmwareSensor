@@ -120,7 +120,7 @@ void reconnectMqtt() {
   MQTT_CLIENT.setClient(client);
   String msg = "";
   while (!MQTT_CLIENT.connected()) {
-    MQTT_CLIENT.connect(SECRET_DEVICE, "flo", "F07101991BEME");
+    MQTT_CLIENT.connect("cuisine", "flo", "F07101991BEME");
     msg += ".";
     if (msg.length() > 36) {
       msg = ".";
@@ -199,18 +199,16 @@ void loop() {
 
       String nameTopic = "espSensor/" ;
 
-      String tempTopicPub = nameTopic + SECRET_DEVICE +"/temp";      
-      String humTopicPub = nameTopic + SECRET_DEVICE +"/hum";
+      String tempTopicStr = nameTopic  + "cuisine/temp";
+      String humTopicStr = nameTopic + "cuisine/hum";
 
+      char tempTopicPub[50];
+      tempTopicStr.toCharArray(tempTopicPub, 50);
+      char humTopicPub[50];
+      humTopicStr.toCharArray(humTopicPub, 50);
 
-      Serial.println(test);
-
-      //      String tempTopicPub = "espSensor/" + SECRET_DEVICE + "/temp";
-      //      String humTopicPub = "espSensor/" + SECRET_DEVICE + "/hum";
-
-
-      //      MQTT_CLIENT.publish(tempTopicPub, tempString);
-      //      MQTT_CLIENT.publish(humTopicPub, humString);
+      MQTT_CLIENT.publish(tempTopicPub, tempString);
+      MQTT_CLIENT.publish(humTopicPub, humString);
 
       delay(100);
       humMore(hum);
