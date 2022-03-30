@@ -18,7 +18,6 @@ unsigned long timerDelay = 5000;
 
 int ledPinBlue = 16;
 int ledPinRed = 14;
-int ledPinGreen = 5;
 
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -34,9 +33,9 @@ void setup() {
   Serial.println("-------------------------------------");
 
   // Initialisation des led
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(ledPinBlue, OUTPUT);
   pinMode(ledPinRed, OUTPUT);
-  pinMode(ledPinGreen, OUTPUT);
   TestLedStart();
   delay(1000);
 
@@ -61,13 +60,15 @@ void setup() {
   Serial.println("Connection MQTT start...");
   Serial.println("-------------------------------------");
   reconnectMqtt();
-  digitalWrite(ledPinGreen, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.println("-------------------------------------");
   delay(2000);
 
   digitalWrite(ledPinRed, LOW);
   digitalWrite(ledPinBlue, LOW);
-  digitalWrite(ledPinGreen, LOW);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  delay(2000);
 
 }
 
@@ -88,9 +89,9 @@ void TestLedStart() {
   delay(500);
   digitalWrite(ledPinRed, HIGH);
   delay(500);
-  digitalWrite(ledPinGreen, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
   delay(500);
-  digitalWrite(ledPinGreen, LOW);
+  digitalWrite(LED_BUILTIN, LOW);
   delay(500);
   digitalWrite(ledPinRed, LOW);
   delay(500);
@@ -120,6 +121,9 @@ void reconnectMqtt() {
   MQTT_CLIENT.setClient(client);
   String msg = "";
   while (!MQTT_CLIENT.connected()) {
+    /*
+      A changer
+    */
     MQTT_CLIENT.connect("cuisine", "flo", "F07101991BEME");
     msg += ".";
     if (msg.length() > 36) {
@@ -128,9 +132,9 @@ void reconnectMqtt() {
     } else {
       Serial.print(msg);
     }
-    digitalWrite(ledPinGreen, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(1000);
-    digitalWrite(ledPinGreen, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
     delay(1000);
   }
   Serial.println("MQTT connected");
@@ -197,18 +201,11 @@ void loop() {
       dtostrf(temp, 1, 2, tempString);
       dtostrf(hum, 1, 2, humString);
 
-      String nameTopic = "espSensor/" ;
-
-      String tempTopicStr = nameTopic  + "cuisine/temp";
-      String humTopicStr = nameTopic + "cuisine/hum";
-
-      char tempTopicPub[50];
-      tempTopicStr.toCharArray(tempTopicPub, 50);
-      char humTopicPub[50];
-      humTopicStr.toCharArray(humTopicPub, 50);
-
-      MQTT_CLIENT.publish(tempTopicPub, tempString);
-      MQTT_CLIENT.publish(humTopicPub, humString);
+      /*
+        A changer
+      */
+      MQTT_CLIENT.publish("espSensor/cuisine/temp", tempString);
+      MQTT_CLIENT.publish("espSensor/cuisine/hum", humString);
 
       delay(100);
       humMore(hum);
@@ -216,10 +213,10 @@ void loop() {
       tempMore(temp);
       delay(100);
 
-      digitalWrite(ledPinGreen, HIGH);
-      delay(200);
-      digitalWrite(ledPinGreen, LOW);
-      delay(200);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(800);
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(800);
     } else {
       reconnectWifi();
     }
