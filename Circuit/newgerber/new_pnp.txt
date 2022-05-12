@@ -1,0 +1,20 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=new
+*Date=15:30:27
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;5 mm [THT];40.0895;-37.3199;180;Bottom;LR
+2;;;24.2703;-64.7097;90;Bottom;U1
+3;;Breakout board;71.6352;-43.1678;-90;Bottom;Mod1
+4;;5 mm [THT];52.7895;-37.3199;180;Bottom;LB
+5;100;THT;31.4172;-44.143;45;Bottom;R100

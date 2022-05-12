@@ -6,8 +6,11 @@
 
 #include "arduino_secrets.h"
 
-#define DHTPIN 4     // what digital pin the DHT22 is conected to
-#define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
+#define DHTPIN 4     // what digital pin the DHT22 is conected to*
+/*
+ * A changer suivant le capteur
+ */
+#define DHTTYPE DHT11   // there are multiple kinds of DHT sensors
 
 const char* ssid = SECRET_SSID ;
 const char* password = SECRET_PASS;
@@ -124,7 +127,7 @@ void reconnectMqtt() {
     /*
       A changer
     */
-    MQTT_CLIENT.connect("cuisine", "flo", "F07101991BEME");
+    MQTT_CLIENT.connect("bureau", "flo", "F07101991BEME");
     msg += ".";
     if (msg.length() > 36) {
       msg = ".";
@@ -175,6 +178,7 @@ void loop() {
         reconnectMqtt();
       }
 
+      
       float temp = dht.readTemperature();
       delay(100);
       float hum = dht.readHumidity();
@@ -186,6 +190,8 @@ void loop() {
         lastTime = 0;
         return;
       }
+
+     
 
       Serial.print("humidity: ");
       Serial.println(hum);
@@ -204,8 +210,8 @@ void loop() {
       /*
         A changer
       */
-      MQTT_CLIENT.publish("espSensor/cuisine/temp", tempString);
-      MQTT_CLIENT.publish("espSensor/cuisine/hum", humString);
+      MQTT_CLIENT.publish("espSensor/bureau/temp", tempString);
+      MQTT_CLIENT.publish("espSensor/bureau/hum", humString);
 
       delay(100);
       humMore(hum);
